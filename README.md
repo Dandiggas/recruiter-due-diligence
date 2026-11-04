@@ -8,6 +8,10 @@ In late October 2026, hackers took about $6.3 billion from Binance. Binance's ow
 
 That attack depends on two things: you don't check the company before the code arrives, and you run the code. This skill attacks both.
 
+I've run due diligence on recruiter messages with my AI agents since March 2026. It became a skill in the summer. After the Binance story, I added the take-home check and published it.
+
+Every check uses public information only. A real recruiter at a real company passes them in minutes.
+
 ## What it does
 
 It answers two questions and keeps them apart:
@@ -80,6 +84,10 @@ scripts/inspect-takehome.sh ~/Downloads/assessment.zip
 - Archives inside the take-home are flagged, not unpacked. Inspect them on their own.
 - The public-address check looks the name up before connecting. A domain that changes its answer between the check and the connection (DNS rebinding) could slip past. The download container still runs nothing.
 - A container on macOS runs inside a Linux virtual machine. Container escapes are rare, and the reading container runs nothing, but this is not a malware lab.
+
+## Considering
+
+- **Run mode:** run a suspect take-home in a malware test lab (a sandbox such as CAPE) on a rented cloud machine you delete afterwards, off by default. It will never run on your own laptop.
 
 ## Tests
 
