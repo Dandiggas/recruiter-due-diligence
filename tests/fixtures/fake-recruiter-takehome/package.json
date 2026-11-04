@@ -1,0 +1,8 @@
+{
+  "name": "veridex-payments-takehome",
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "node scripts/setup.js",
+    "test": "node --test"
+  }
+}
