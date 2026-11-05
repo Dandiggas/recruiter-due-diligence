@@ -44,6 +44,12 @@ expect "$T/deps" high "node_modules/helper/index.js:hidden_code"
 expect "$T/hook" high ".git/hooks/post-checkout:auto_run"
 expect "$T/link" medium
 
+# Review finding 7 (Codex, 4 Nov night): a git hook inside a top-level folder,
+# the usual zip shape, was read as low.
+mkdir -p "$T/wrap/takehome/.git/hooks"; printf '#!/bin/sh\necho hi\n' > "$T/wrap/takehome/.git/hooks/pre-commit"
+(cd "$T/wrap" && zip -qr "$T/wrapped.zip" takehome)
+expect "$T/wrapped.zip" high "takehome/.git/hooks/pre-commit:auto_run"
+
 # Finding 5: every text file is read, whatever its name.
 mkdir -p "$T/single" "$T/svg"
 printf 'const k = "wallet.dat"; eval(k)\n' > "$T/single/payload"

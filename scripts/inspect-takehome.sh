@@ -2,6 +2,8 @@
 # Read a recruiter take-home inside locked containers. Run none of it.
 #
 #   inspect-takehome.sh <https link | path to .zip/.tar.gz | path to folder>
+#   inspect-takehome.sh --remote <same>   do it all in a throwaway GitHub
+#                                          codespace instead (inspect-remote.sh)
 #
 # Step 1 (unpack): a throwaway container gets the files into a private
 #   container volume. Network is on only for a web link, to download it.
@@ -17,6 +19,11 @@ set -euo pipefail
 IMAGE="${INSPECT_IMAGE:-python:3.12-alpine}"
 TIME_LIMIT="${INSPECT_TIME_LIMIT:-180}"
 SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [ "${1:-}" = "--remote" ]; then
+  shift
+  exec "$SCRIPTS/inspect-remote.sh" "$@"
+fi
 
 if [ $# -ne 1 ]; then
   echo "usage: $(basename "$0") <https link | archive | folder>" >&2

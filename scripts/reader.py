@@ -98,7 +98,7 @@ def main(root: Path, source_file: Path) -> None:
     findings = []
     for path in files:
         rel = path.relative_to(root).as_posix()
-        if rel.startswith(GIT_DIR + "/"):
+        if GIT_DIR in rel.split("/")[:-1]:  # inside a .git folder at any depth
             findings += check_git_hook(rel)
             continue
         findings += check_auto_run(path, rel)
@@ -137,7 +137,10 @@ def is_archive(path: Path) -> bool:
 
 
 def check_git_hook(rel: str) -> list:
-    if rel.startswith(".git/hooks/") and not rel.endswith(".sample"):
+    """A hook in any .git folder, also one inside a top-level folder (most zips)."""
+    parts = rel.split("/")
+    in_hooks = any(parts[i] == GIT_DIR and parts[i + 1] == "hooks" for i in range(len(parts) - 2))
+    if in_hooks and not rel.endswith(".sample"):
         return [finding(rel, "auto_run", "high", "Git hook shipped in the take-home: runs when you commit, checkout or push.", "")]
     return []
 

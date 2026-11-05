@@ -59,6 +59,14 @@ If there is a repo link, a zip, or any file:
 scripts/inspect-takehome.sh <https link | path to .zip or .tar.gz | path to folder>
 ```
 
+**Remote mode.** If the user does not want the take-home on their machine at all, or they have no Docker, and `gh` is logged in with the `codespace` scope, add `--remote`:
+
+```bash
+scripts/inspect-takehome.sh --remote <same target>
+```
+
+The same scan runs in a throwaway GitHub codespace (a short-lived cloud machine). Archives travel packed and are only unpacked there. The report comes back with `"where": "codespace"`, and the codespace is deleted every time. If the report's `codespace` field says `NOT deleted` (exit code 5), tell the user and give them the delete command from that field: it may still be using their allowance. Each run takes about 30 seconds and a few minutes of the free codespace allowance.
+
 It unpacks the take-home in one locked container, then reads it in a second container with no network, read-only files and no admin rights. It prints a JSON report that lists:
 - code that runs on its own: npm `postinstall` and friends, `setup.py`, editor tasks set to run when the folder opens (`.vscode/tasks.json` with `folderOpen`), dev-container and MCP configs
 - hidden code: `eval`, decoded base64, packed one-line code

@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Stand-in for the GitHub CLI, used by tests/remote-offline.sh.
+# The "codespace" is a local folder; ssh runs the command here with real Docker.
+# STUB_LOG records every call. STUB_STATE/alive holds "name<TAB>display name"
+# while the codespace exists. STUB_FAIL picks a failure to act out:
+#   auth            gh has no codespace permission (list fails)
+#   create          create fails, nothing made
+#   create-partial  create makes it, prints the name, then exits 1
+#   create-silent   create makes it but prints nothing and exits 1
+#   ssh             every ssh call fails (Docker never looks ready)
+#   upload          copying files in fails
+#   scan            the connection drops mid-scan: half a report, no marker
+#   badreport       the scan returns a malformed report
+#   keep            delete does nothing
+#   list-after-delete  listing fails once a delete was asked for
+set -uo pipefail
+echo "$*" >> "$STUB_LOG"
+fail="${STUB_FAIL:-}"
+case "$1 $2" in
+  "codespace list")
+    [ "$fail" = auth ] && exit 1
+    [ "$fail" = list-after-delete ] && [ -f "$STUB_STATE/delete-asked" ] && exit 1
+    [ -f "$STUB_STATE/alive" ] && cat "$STUB_STATE/alive"; exit 0 ;;
+  "codespace create")
+    [ "$fail" = create ] && exit 1
+    display=""; while [ $# -gt 0 ]; do [ "$1" = --display-name ] && display="$2"; shift; done
+    printf 'stub-space-1\t%s\n' "$display" > "$STUB_STATE/alive"
+    case "$fail" in create-partial) echo stub-space-1; exit 1 ;; create-silent) exit 1 ;; esac
+    echo "stub-space-1" ;;
+  "codespace delete")
+    touch "$STUB_STATE/delete-asked"
+    [ "$fail" = keep ] || rm -f "$STUB_STATE/alive" ;;
+  "codespace ssh")
+    [ "$fail" = ssh ] && exit 1
+    shift 2; while [ "$1" != "--" ]; do shift; done; shift
+    cmd="$*"
+    [ "$fail" = upload ] && [[ "$cmd" == *"cat > "* ]] && exit 1
+    if [[ "$cmd" == "bash "*inspect-takehome.sh* ]]; then
+      [ "$fail" = scan ] && { printf '{"risk": "low", "findings": ['; exit 255; }
+      [ "$fail" = badreport ] && { echo '{"risk": "LOW"}'; echo RDD_EXIT=0 >&2; exit 0; }
+    fi
+    bash -c "$cmd" || exit 1 ;;  # like real gh: any remote failure comes back as 1
+  *) echo "stub gh: unknown $*" >&2; exit 1 ;;
+esac
